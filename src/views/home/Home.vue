@@ -6,48 +6,24 @@
          <div>商城</div>
       </template>
 </nav-bar>
-<home-swiper :banners="banners"></home-swiper>
-<recommend-view :recommends="recommends"></recommend-view>
-<feature-vue></feature-vue>
-<tab-control :titles="['精选','推荐','美妆']" class="tab-control" @tabClick="tabClick"></tab-control>
-<goods-list :goods="showGoods" ></goods-list>
+ <tab-control :titles="['精选','推荐','美妆']" class="tab-control" 
+    @tabClick="tabClick"
+    ref="tabControl1"
+    v-show="iShowTabControl"
+   ></tab-control>
+<scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll" 
+        :pull-up-load="true"
+        @pullingUp="pullingUp">
+    <home-swiper :banners="banners"  @homeSwiperImgLoad="homeSwiperImgLoad"></home-swiper>
+    <recommend-view :recommends="recommends"></recommend-view>
+    <feature-vue/>
+    <tab-control :titles="['精选','推荐','美妆']" 
+    @tabClick="tabClick"
+    ref="tabControl2"></tab-control>
+    <goods-list :goods="showGoods" ></goods-list>
+</scroll>
 
-<ul>
-    <li>2</li>
-     <li>2</li>
-      <li>2</li>
-      <li>2</li>
-     <li>2</li>
-      <li>2</li>
-      <li>2</li>
-     <li>2</li>
-      <li>2</li>
-      <li>2</li>
-     <li>2</li>
-      <li>2</li>
-      <li>2</li>
-     <li>2</li>
-      <li>2</li>
-      <li>2</li>
-     <li>2</li>
-      <li>2</li>
-      <li>2</li>
-     <li>2</li>
-      <li>2</li>
-      <li>2</li>
-     <li>2</li>
-      <li>2</li>
-      <li>2</li>
-     <li>2</li>
-      <li>2</li>
-      <li>2</li>
-     <li>2</li>
-      <li>25</li>
-        <li>2</li>
-      <li>2</li>
-     <li>2</li>
-      <li>2</li>
-</ul>
+<back-top @click.native="backClick" v-show="isShowBackTop"></back-top>
 </div>
 
 
@@ -55,8 +31,10 @@
 
 <script>
     import NavBar from 'components/common/navbar/NavBar'
+    import Scroll from 'components/common/scroll/Scroll.vue'
     import TabControl from 'components/content/tabControl/TabControl.vue'
     import GoodsList from 'components/content/goodsList/GoodsList.vue'
+    import BackTop from 'components/content/backTop/BackTop.vue'
 
 
     import HomeSwiper from './childComps/homeSwiper.vue'
@@ -64,16 +42,21 @@
     import FeatureVue from './childComps/FeatureVue.vue'
 
     import {getHomeMultidata,getHomeGoods} from 'network/home.js'
+    import {debounce} from 'common/utils.js'
+    
   
     export default {
         name: "Home",
         components: {
             NavBar,
+             Scroll,
             HomeSwiper,
             RecommendView,
             FeatureVue,
             TabControl,
-            GoodsList
+            GoodsList,
+            BackTop
+               
               
         },
         data() {
@@ -85,9 +68,11 @@
                  'new':{page:0,list:[]},
                  'sell':{page:0,list:[]}
                  },
-                 currentType:'pop',
+                 currentType:'pop',  
+                 isShowBackTop:false,
+                 tabControlOffsetTop:0,
+                 iShowTabControl:false
 
-                
             }
             
         },
@@ -96,6 +81,7 @@
           this.getHomeGoods("pop")
           this.getHomeGoods("new")
           this.getHomeGoods("sell")
+          
 
         },
         computed:{
@@ -118,6 +104,9 @@
 
 
             }
+           this.$refs.tabControl1.isactive=index;
+            this.$refs.tabControl2.isactive=index;
+
             },
             getHomeGoods(type){
                 const page=this.goods[type].page +1
@@ -125,7 +114,7 @@
                     
                   this.goods[type].list.push(...res.data.list)
                   this.goods[type].page +=1
-
+                  this.$refs.scroll.finishPullUp()
                 })
             },
             getHomeMultidata(){
@@ -133,8 +122,36 @@
                this.banners=res.data.banner.list;
                this.recommends=res.data.recommend.list
            }) 
+            },
+            backClick(){
+             this.$refs.scroll.scrollTo(0,0,400)
+         },
+            contentScroll(option){
+                this.isShowBackTop = - option.y > 1000;
+                this.iShowTabControl= -option.y > this.tabControlOffsetTop
+                
+                
+            },
+            pullingUp(){
+                this.getHomeGoods(this.currentType);
+                
+                
+            },
+            homeSwiperImgLoad(){
+               this.tabControlOffsetTop = this.$refs.tabControl2.$el.offsetTop; 
+               
             }
+          
         },
+        mounted() {
+            const refresh = debounce( this.$refs.scroll.refresh,50)
+            this.$bus.$on('imgLoad',()=>{
+              refresh()
+          })
+           
+        },
+       
+        
 
     }
 </script>
@@ -143,18 +160,25 @@
     .home-nav {
         background-color: var(--color-tint);
         color: white;
-        position: fixed;
-        left: 0;
-        right: 0;
-        top: 0;
-        z-index: 9;
+       
     }
     #home{
-        padding-top: 44px;
+        /* padding-top: 44px; */
+          height: 100vh;
+          /* height: 200px; */
+        position: relative;
     }
     .tab-control{
-        position: sticky;
-        top: 44px;
+        position: relative;     
         z-index: 9;
+        
+    }
+    .content{
+        position: absolute;
+        top: 44px;
+        bottom: 49px;
+        left: 0;
+        right: 0;
+        overflow: hidden;
     }
 </style>
