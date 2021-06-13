@@ -71,7 +71,8 @@
                  currentType:'pop',  
                  isShowBackTop:false,
                  tabControlOffsetTop:0,
-                 iShowTabControl:false
+                 iShowTabControl:false,
+                 saveY:0
 
             }
             
@@ -83,6 +84,16 @@
           this.getHomeGoods("sell")
           
 
+        },
+        activated() {
+            this.$refs.scroll.scrollTo(0,this.saveY,0);
+            this.$refs.scroll.refresh()
+            console.log(this.saveY);  
+
+        },
+        deactivated() {
+          this.saveY= this.$refs.scroll.scroll.y;
+           console.log(this.$refs.scroll.scroll.y);   
         },
         computed:{
             showGoods() {
@@ -116,6 +127,7 @@
                   this.goods[type].page +=1
                   this.$refs.scroll.finishPullUp()
                 })
+                console.log(window.location.href)
             },
             getHomeMultidata(){
                getHomeMultidata().then(res=>{
