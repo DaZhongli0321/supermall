@@ -44,7 +44,7 @@ export default {
            this.$emit('scroll', option);
        })
        this.scroll.on("pullingUp",()=>{
-           console.log("2212")
+        //    console.log("2212")
            this.$emit('pullingUp');
        })
     },

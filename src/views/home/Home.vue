@@ -34,7 +34,7 @@
     import Scroll from 'components/common/scroll/Scroll.vue'
     import TabControl from 'components/content/tabControl/TabControl.vue'
     import GoodsList from 'components/content/goodsList/GoodsList.vue'
-    import BackTop from 'components/content/backTop/BackTop.vue'
+    
 
 
     import HomeSwiper from './childComps/homeSwiper.vue'
@@ -42,7 +42,8 @@
     import FeatureVue from './childComps/FeatureVue.vue'
 
     import {getHomeMultidata,getHomeGoods} from 'network/home.js'
-    import {debounce} from 'common/utils.js'
+   
+    import {itemImgLinster,backTopMaxins} from 'common/mixins.js'
     
   
     export default {
@@ -55,7 +56,7 @@
             FeatureVue,
             TabControl,
             GoodsList,
-            BackTop
+           
                
               
         },
@@ -69,14 +70,16 @@
                  'sell':{page:0,list:[]}
                  },
                  currentType:'pop',  
-                 isShowBackTop:false,
+               
                  tabControlOffsetTop:0,
                  iShowTabControl:false,
-                 saveY:0
+                 saveY:0,
+                
 
             }
             
         },
+        mixins:[itemImgLinster,backTopMaxins],
         created() {
           this.getHomeMultidata()
           this.getHomeGoods("pop")
@@ -88,12 +91,13 @@
         activated() {
             this.$refs.scroll.scrollTo(0,this.saveY,0);
             this.$refs.scroll.refresh()
-            console.log(this.saveY);  
+            // console.log(this.saveY);  
 
         },
         deactivated() {
           this.saveY= this.$refs.scroll.scroll.y;
-           console.log(this.$refs.scroll.scroll.y);   
+        //    console.log(this.$refs.scroll.scroll.y);   
+         this.$bus.$off('imgLoad',this.itemImgListener)
         },
         computed:{
             showGoods() {
@@ -127,7 +131,7 @@
                   this.goods[type].page +=1
                   this.$refs.scroll.finishPullUp()
                 })
-                console.log(window.location.href)
+                // console.log(window.location.href)
             },
             getHomeMultidata(){
                getHomeMultidata().then(res=>{
@@ -135,9 +139,7 @@
                this.recommends=res.data.recommend.list
            }) 
             },
-            backClick(){
-             this.$refs.scroll.scrollTo(0,0,400)
-         },
+           
             contentScroll(option){
                 this.isShowBackTop = - option.y > 1000;
                 this.iShowTabControl= -option.y > this.tabControlOffsetTop
@@ -156,15 +158,15 @@
           
         },
         mounted() {
-            const refresh = debounce( this.$refs.scroll.refresh,50)
-            this.$bus.$on('imgLoad',()=>{
-              refresh()
-          })
+        //     const refresh = debounce( this.$refs.scroll.refresh,50)
+        //     this.itemImgListener= ()=>{
+        //       refresh()
+        //   }
+        //     this.$bus.$on('imgLoad',this.itemImgListener)
+        // console.log('homemounted');
            
         },
-       
         
-
     }
 </script>
 
@@ -183,6 +185,7 @@
     .tab-control{
         position: relative;     
         z-index: 9;
+
         
     }
     .content{
